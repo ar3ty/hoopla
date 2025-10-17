@@ -2,7 +2,7 @@
 
 import argparse
 
-from lib.keyword_search import search_command, build_command
+from lib.keyword_search import search_command, build_command, tf_command
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
@@ -11,7 +11,11 @@ def main() -> None:
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
 
-    search_parser = subparsers.add_parser("build", help="Builds the inverted index and saves it to disk")
+    subparsers.add_parser("build", help="Builds the inverted index and saves it to disk")
+
+    tf_parser = subparsers.add_parser("tf", help="Prints the term frequency in the document with the given ID.")
+    tf_parser.add_argument("doc_id", type=str, help="Document to look into")
+    tf_parser.add_argument("term", type=str, help="Term to look frequency for")
 
     args = parser.parse_args()
 
@@ -20,12 +24,21 @@ def main() -> None:
             print(f"Searching for: {args.query}")
             try:
                 results = search_command(args.query)
+                print("Found:")
                 for i, res in enumerate(results, 1):
                     print(f"{i}. {res["title"]}")
             except Exception as e:
                 print(f"{e}")
         case "build":
+            print("Building inverted index...")
             build_command()
+            print("Inverted index built successfully.")
+        case "tf":
+            try:
+                frequency = tf_command(args.doc_id, args.term)
+                print(f"Term frequency of '{args.term}' in document '{args.doc_id}': {frequency}")
+            except Exception as e:
+                print(f"{e}")    
         case _:
             parser.exit(2, parser.format_help())
 
