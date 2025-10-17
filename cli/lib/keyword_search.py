@@ -1,4 +1,4 @@
-import string, os, collections
+import string, os, collections, math
 
 from nltk.stem import PorterStemmer
 from pickle import dump, load
@@ -36,7 +36,16 @@ class InvertedIndex:
         tokens = tokenize_and_preprocess_text(term)
         if len(tokens) != 1:
             raise ValueError("term should present only one word")
-        return self.term_frequencies[doc_id][term]
+        return self.term_frequencies[doc_id][tokens[0]]
+    
+    def get_idf(self, term: str) -> float:
+        tokens = tokenize_and_preprocess_text(term)
+        if len(tokens) != 1:
+            raise ValueError("term should present only one word")
+        return math.log((len(self.docmap ) + 1) / (len(self.get_documents(tokens[0])) + 1))
+    
+    def get_tf_idf(self, doc_id: int, term: str) -> float:
+        return self.get_tf(doc_id, term) * self.get_idf(term)
 
     def build(self) -> None:
         items = load_movies()
@@ -63,15 +72,20 @@ class InvertedIndex:
         with open(TF_PATH, "rb") as f:
             self.term_frequencies = load(f)
 
-def build_command() -> None:
-    idx = InvertedIndex()
-    idx.build()
-    idx.save()
+def fully_matches_to_any(token: str, words: list[str]) -> bool:
+    for word in words:
+        if token == word:
+            return True
+    return False
 
-def tf_command(doc_id: str, term: str) -> None:
-    idx = InvertedIndex()
-    idx.load()
-    return idx.get_tf(int(doc_id), term)
+def tokenize_and_preprocess_text(text: str) -> list[str]:
+    text = text.lower()
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    tokens = list(filter(lambda x: x != "", text.split()))
+    stopwords = load_stopwords()
+    tokens = list(filter(lambda x: not fully_matches_to_any(x, stopwords), tokens))
+    stemmer = PorterStemmer()
+    return list(map(stemmer.stem, tokens))
 
 def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
     idx = InvertedIndex()
@@ -93,17 +107,22 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
                 return results
     return results
 
-def fully_matches_to_any(token: str, words: list[str]) -> bool:
-    for word in words:
-        if token == word:
-            return True
-    return False
+def build_command() -> None:
+    idx = InvertedIndex()
+    idx.build()
+    idx.save()
 
-def tokenize_and_preprocess_text(text: str) -> list[str]:
-    text = text.lower()
-    text = text.translate(str.maketrans('', '', string.punctuation))
-    tokens = list(filter(lambda x: x != "", text.split()))
-    stopwords = load_stopwords()
-    tokens = list(filter(lambda x: not fully_matches_to_any(x, stopwords), tokens))
-    stemmer = PorterStemmer()
-    return list(map(stemmer.stem, tokens))
+def tf_command(doc_id: str, term: str) -> int:
+    idx = InvertedIndex()
+    idx.load()
+    return idx.get_tf(int(doc_id), term)
+
+def idf_command(term: str) -> float:
+    idx = InvertedIndex()
+    idx.load()
+    return idx.get_idf(term)
+
+def tf_idf_command(doc_id: str, term: str) -> float:
+    idx = InvertedIndex()
+    idx.load()
+    return idx.get_tf_idf(int(doc_id), term)
