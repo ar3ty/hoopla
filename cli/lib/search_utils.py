@@ -21,11 +21,19 @@ def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:
         return f.read().splitlines()
     
-def format_search_result(doc_id: str, title: str, document: str, score: float, **metadata: Any) -> dict[str, Any]:
+def format_key_search_result(doc_id: str, title: str, document: str, score: float, **metadata: Any) -> dict[str, Any]:
     return {
         "id": doc_id,
         "title": title,
         "document": document,
         "score": round(score, SCORE_PRECISION),
+        "metadata": metadata if metadata else {},
+    }
+
+def format_semantic_search_result(score: float, title: str, description: str, **metadata: Any) -> dict[str, Any]:
+    return {
+        "score": round(score, SCORE_PRECISION),
+        "title": title,
+        "description": description,
         "metadata": metadata if metadata else {},
     }
