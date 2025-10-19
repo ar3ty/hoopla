@@ -13,7 +13,11 @@ from lib.keyword_search import (
     bm25search_command,
 )
 
-from lib.search_utils import BM25_K1, BM25_B, DEFAULT_SEARCH_LIMIT
+from lib.search_utils import (
+    BM25_K1,
+    BM25_B,
+    DEFAULT_SEARCH_LIMIT,
+)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")

@@ -7,7 +7,8 @@ from .search_utils import (
     CACHE_DIR,
     load_movies,
     format_semantic_search_result,
-    DEFAULT_SEARCH_LIMIT
+    DEFAULT_SEARCH_LIMIT,
+    DEFAULT_CHUNK_SIZE,
 )
 
 MOVIE_EMBEDDINGS_PATH = os.path.join(CACHE_DIR, "movie_embeddings.npy")
@@ -48,7 +49,7 @@ class SemanticSearch:
         embedding = self.model.encode([text])
         return embedding[0]
     
-    def search(self, query: str, limit: int):
+    def search(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT):
         if (
             self.embeddings is None or 
             self.embeddings.size == 0 or 
@@ -122,3 +123,20 @@ def semantic_search(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]
         print(f"{i}. {res["title"]} (score: {res["score"]:.4f})")
         print(f"   {res["description"][:100]}...")
         print()
+
+def fixed_size_chunking(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE) -> list[str]:
+    words = text.split()
+    results = []
+
+    i = 0
+    while i < len(words):
+        chunk = words[i : i + chunk_size]
+        results.append(" ".join(chunk))
+        i += chunk_size
+    return results
+
+def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
+    results = fixed_size_chunking(text, chunk_size)
+    print(f"Chunking {len(text)} characters")
+    for i, res in enumerate(results, 1):
+        print(f"{i}. {res}")

@@ -2,6 +2,7 @@ import os, json
 from typing import Any
 
 DEFAULT_SEARCH_LIMIT = 5
+DEFAULT_CHUNK_SIZE = 200
 SCORE_PRECISION = 3
 
 BM25_K1 = 1.5
