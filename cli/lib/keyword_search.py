@@ -12,7 +12,7 @@ from .search_utils import (
     BM25_B,
     load_stopwords,
     load_movies,
-    format_key_search_result,
+    format_search_result,
 )
 
 INDEX_PATH = os.path.join(CACHE_DIR, "index.pkl")
@@ -102,7 +102,7 @@ class InvertedIndex:
         results = []
         for doc_id, score in ranked_docs[:limit]:
             doc = self.docmap[doc_id]
-            f_result = format_key_search_result(
+            f_result = format_search_result(
                 doc_id=doc_id,
                 title=doc["title"],
                 document=doc["description"],

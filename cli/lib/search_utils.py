@@ -3,7 +3,10 @@ from typing import Any
 
 DEFAULT_SEARCH_LIMIT = 5
 DEFAULT_CHUNK_SIZE = 200
+MAX_CHUNK_SIZE = 4
+DEFAULT_CHUNK_OVERLAP = 1
 SCORE_PRECISION = 3
+DOCUMENT_PREVIEW_LENGTH = 100
 
 BM25_K1 = 1.5
 BM25_B = 0.75
@@ -22,7 +25,7 @@ def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:
         return f.read().splitlines()
     
-def format_key_search_result(doc_id: str, title: str, document: str, score: float, **metadata: Any) -> dict[str, Any]:
+def format_search_result(doc_id: str, title: str, document: str, score: float, **metadata: Any) -> dict[str, Any]:
     return {
         "id": doc_id,
         "title": title,
