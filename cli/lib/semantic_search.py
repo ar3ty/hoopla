@@ -1,4 +1,4 @@
-import os, json
+import os, json, string
 import numpy as np
 import regex as re
 
@@ -150,15 +150,25 @@ def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE, overlap: int = D
         print(f"{i}. {res}")
 
 def chunk_sentences(text: str, max_chunk_size: int = MAX_CHUNK_SIZE, overlap: int = DEFAULT_CHUNK_OVERLAP) -> list[str]:
-    sentences = re.split(r"(?<=[.!?])\s+", text)
-    results = []
+    text = text.strip()
+    if not text:
+        return []
 
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    if len(sentences) == 1 and not sentences[0].endswith((".", "!", "?")):
+        sentences = [text]
+    
+    sentences = [s.strip() for s in sentences if s.strip()]
+
+    results = []
     i = 0
-    length_sentences = len(sentences)
-    while i < length_sentences - overlap:
+
+    while i < len(sentences):
         chunk = sentences[i : i + max_chunk_size]
+        if not chunk:
+            break
         results.append(" ".join(chunk))
-        i += max_chunk_size - overlap
+        i += max(1, max_chunk_size - overlap)
     return results
 
 def semantic_chunk_text(text: str, max_chunk_size: int = MAX_CHUNK_SIZE, overlap: int = DEFAULT_CHUNK_OVERLAP) -> None:
@@ -229,20 +239,12 @@ class ChunkedSemanticSearch(SemanticSearch):
         
         query_embed = self.generate_embedding(query)
 
-        scores = []
+        idxs_to_scores = {}
         for i, chunk_embed in enumerate(self.chunk_embeddings):
             co_sim = cosine_similarity(query_embed, chunk_embed)
-            scores.append({
-                "chunk_idx": i,
-                "movie_idx": self.chunk_metadata[i]["movie_idx"],
-                "score": co_sim,
-            })
-        
-        idxs_to_scores = {}
-        for score in scores:
-            m_idx = score["movie_idx"]
-            if m_idx not in idxs_to_scores or idxs_to_scores[m_idx] < score["score"]:
-                idxs_to_scores[m_idx] = score["score"]
+            m_idx = self.chunk_metadata[i]["movie_idx"]
+            if m_idx not in idxs_to_scores or idxs_to_scores[m_idx] < co_sim:
+                idxs_to_scores[m_idx] = co_sim
         
         ranked = list(idxs_to_scores.items())
         ranked.sort(key=lambda x: x[1], reverse=True)
