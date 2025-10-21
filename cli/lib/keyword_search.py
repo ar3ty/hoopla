@@ -26,6 +26,7 @@ class InvertedIndex:
         self.docmap = {}
         self.term_frequencies = defaultdict(Counter)
         self.doc_lengths = {}
+        self.index_path = INDEX_PATH
 
     def __add_document(self, doc_id: int, text: str) -> None:
         tokens = tokenize_and_preprocess_text(text)
@@ -120,7 +121,7 @@ class InvertedIndex:
 
     def save(self) -> None:
         os.makedirs(CACHE_DIR, exist_ok=True)
-        with open(INDEX_PATH, "wb") as f:
+        with open(self.index_path, "wb") as f:
             dump(self.index, f)
         with open(DOCMAP_PATH, "wb") as f:
             dump(self.docmap, f)
@@ -130,7 +131,7 @@ class InvertedIndex:
             dump(self.doc_lengths, f)
 
     def load(self) -> None:
-        with open(INDEX_PATH, "rb") as f:
+        with open(self.index_path, "rb") as f:
             self.index = load(f)
         with open(DOCMAP_PATH, "rb") as f:
             self.docmap = load(f)

@@ -228,7 +228,7 @@ class ChunkedSemanticSearch(SemanticSearch):
         
         return self.build_chunk_embeddings(documents)
     
-    def search_chunks(self, query: str, limit: int = 10):
+    def search_chunks(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT):
         if (
             self.chunk_embeddings is None or 
             self.chunk_embeddings.size == 0 or 
@@ -255,7 +255,7 @@ class ChunkedSemanticSearch(SemanticSearch):
             results.append(format_search_result(
                 doc_id=doc["id"],
                 title=doc["title"],
-                document=doc["description"][:DOCUMENT_PREVIEW_LENGTH],
+                document=doc["description"],
                 score=score,
             ))
         
@@ -276,4 +276,4 @@ def search_chunked(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> None:
     print("Results:")
     for i, res in enumerate(results, 1):
         print(f"\n{i}. {res["title"]} (score: {res["score"]:.4f})")
-        print(f"   {res["document"]}...")
+        print(f"   {res["document"][:DOCUMENT_PREVIEW_LENGTH]}...")
