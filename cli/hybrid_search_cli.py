@@ -27,8 +27,9 @@ def main() -> None:
     rrf_search_parser = subparsers.add_parser("rrf-search", help="Perform Reciprocal Rank Fusion search")
     rrf_search_parser.add_argument("query", type=str, help="Query to search")
     rrf_search_parser.add_argument("--k", type=float, nargs='?', default=60, help="Weight parameter for RRF (default=60)")
+    rrf_search_parser.add_argument("--enhance", type=str, choices=["spell", "rewrite", "expand"], help="Query enhancement method")
     rrf_search_parser.add_argument("--limit", type=int, nargs='?', default=DEFAULT_SEARCH_LIMIT, help="Number of returned resources (default=5)")
-
+    
     args = parser.parse_args()
 
     match args.command:
@@ -37,7 +38,7 @@ def main() -> None:
         case "weighted-search":
             weighted_search(args.query, args.alpha, args.limit)
         case "rrf-search":
-            rrf_search(args.query, args.k, args.limit)
+            rrf_search(args.query, args.k, args.enhance, args.limit)
         case _:
             parser.print_help()
 
