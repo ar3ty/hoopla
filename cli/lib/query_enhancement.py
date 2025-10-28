@@ -1,22 +1,4 @@
-import os
-from dotenv import load_dotenv
-from groq import Groq
-
-def perform_groq_request(prompt: str) -> str:
-    load_dotenv()
-    api_key = os.environ.get("GROQ_API_KEY")
-
-    cli = Groq(api_key=api_key)
-    resp = cli.chat.completions.create(
-        model="groq/compound",
-        messages=[{
-            "role": "user",
-            "content": prompt,       
-        }]
-    )
-    text = (resp.choices[0].message.content or "").strip().strip('"')
-    return text
-
+from .llm_request import perform_groq_request
 
 def enhance_spell(query: str) -> str:
     prompt = f"""Fix any spelling errors in this movie search query.

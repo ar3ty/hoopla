@@ -8,10 +8,12 @@ from .search_utils import (
     DOCUMENT_PREVIEW_LENGTH,
     DEFAULT_ALPHA,
     RRF_K,
+    SEARCH_MULTIPLIER,
     load_movies,
     format_search_result,
 )
 from .query_enhancement import enhance_query
+from .reranking import rerank_results
 
 class HybridSearch:
     def __init__(self, documents):
@@ -162,27 +164,43 @@ def weighted_search(query: str, alpha: float = DEFAULT_ALPHA, limit: int = DEFAU
 def rrf_score(rank, k=RRF_K):
     return 1 / (k + rank)
 
-def rrf_search(query: str, k: int = RRF_K, enhance: Optional[str] = None, limit: int = DEFAULT_SEARCH_LIMIT) -> None:
+def rrf_search(query: str, k: int = RRF_K, enhance: Optional[str] = None, rerank_method: Optional[str] = None, limit: int = DEFAULT_SEARCH_LIMIT) -> None:
     if enhance:
         enhanced_query = enhance_query(query, enhance)
         print( f"Enhanced query ({enhance}): '{query}' -> '{enhanced_query}'\n")
         query = enhanced_query
 
+    search_limit = limit * SEARCH_MULTIPLIER if rerank_method else limit
+
     movies = load_movies()
     hs = HybridSearch(movies)
-    results = hs.rrf_search(query, k, limit)
+    results = hs.rrf_search(query, k, search_limit)
+
+    if rerank_method:
+        print(f"Reranking top {len(results)} results using {rerank_method} method...\n")
+        results = rerank_results(query, results, rerank_method, limit)
+
     print(f"RRF Hybrid Search Results for '{query}' (k={k})")
     print("Results:")
     for i, res in enumerate(results, 1):
+        metadata = res.get("metadata", {})
+
         print(f"\n{i}. {res['title']}")
+
+        if metadata.get("individual_score"):
+            print(f"   Rerank Score: {metadata['individual_score']:.3f}/10")
+        if metadata.get("batch_rank"):
+            print(f"   Rerank Rank: {metadata['batch_rank']}")
+        if metadata.get("cross_encoder_score"):
+            print(f"   Cross Encoder Score: {metadata['cross_encoder_score']:.3f}")
+
         print(f"   RRF Score: {res['score']:.3f}")
 
-        metadata = res.get("metadata", {})
         ranks = []
-        if res["metadata"].get("bm25_rank"):
+        if metadata.get("bm25_rank"):
             ranks.append(f"BM25 Rank: {metadata['bm25_rank']}")
-        if res["metadata"].get("semantic_rank"):
-            ranks.append(f"Semaintic Rank: {metadata['semantic_rank']}")
+        if metadata.get("semantic_rank"):
+            ranks.append(f"Semantic Rank: {metadata['semantic_rank']}")
         
         print(f"   {", ".join(ranks)}")
         print(f"   {res['document'][:DOCUMENT_PREVIEW_LENGTH]}...")
