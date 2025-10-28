@@ -14,6 +14,7 @@ from .search_utils import (
 )
 from .query_enhancement import enhance_query
 from .reranking import rerank_results
+from .llm_evaluation import evaluate_rrf_results
 
 class HybridSearch:
     def __init__(self, documents):
@@ -164,7 +165,8 @@ def weighted_search(query: str, alpha: float = DEFAULT_ALPHA, limit: int = DEFAU
 def rrf_score(rank, k=RRF_K):
     return 1 / (k + rank)
 
-def rrf_search(query: str, k: int = RRF_K, enhance: Optional[str] = None, rerank_method: Optional[str] = None, limit: int = DEFAULT_SEARCH_LIMIT) -> None:
+def rrf_search(query: str, k: int = RRF_K, enhance: Optional[str] = None, rerank_method: Optional[str] = None, evaluate: Optional[bool] = False, limit: int = DEFAULT_SEARCH_LIMIT) -> None:
+    print(f"Original query: {query}")
     if enhance:
         enhanced_query = enhance_query(query, enhance)
         print( f"Enhanced query ({enhance}): '{query}' -> '{enhanced_query}'\n")
@@ -175,6 +177,8 @@ def rrf_search(query: str, k: int = RRF_K, enhance: Optional[str] = None, rerank
     movies = load_movies()
     hs = HybridSearch(movies)
     results = hs.rrf_search(query, k, search_limit)
+
+    print(f"RRF results: {[r['title'] for r in results]}")
 
     if rerank_method:
         print(f"Reranking top {len(results)} results using {rerank_method} method...\n")
@@ -204,3 +208,9 @@ def rrf_search(query: str, k: int = RRF_K, enhance: Optional[str] = None, rerank
         
         print(f"   {", ".join(ranks)}")
         print(f"   {res['document'][:DOCUMENT_PREVIEW_LENGTH]}...")
+    
+    if evaluate:
+        print("\nLLM Evaluation (0-3 relevance scale):")
+        report = evaluate_rrf_results(query, results)
+        for i, r in enumerate(report, 1):
+            print(f"{i}. {r['title']}: {r['eval']}/3")

@@ -36,7 +36,7 @@ Give me ONLY the number, e.g. 8"""
     reranked.sort(key=lambda x: x["metadata"]["individual_score"], reverse=True)
     return reranked[:limit]
 
-def parse_rank(s: str) -> float | None:
+def parse_json_list(s: str) -> float | None:
     m = re.search(r"(\[.*?\])", s)
     if not m:
         return None
@@ -55,7 +55,7 @@ Return ONLY the IDs in order of relevance (best match first). Return a valid JSO
 [75, 12, 34, 2, 1]
 """
     raw_ranks = perform_groq_request(prompt)
-    ranks_json = parse_rank(raw_ranks)
+    ranks_json = parse_json_list(raw_ranks)
     ranks = json.loads(ranks_json)
     if not ranks:
         raise Exception("ranking failed")
