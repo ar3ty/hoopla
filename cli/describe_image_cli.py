@@ -6,7 +6,7 @@ from lib.describe_image import (
 def main():
     parser = argparse.ArgumentParser(description="Image Description CLI")
 
-    parser.add_argument("--image", type=str,  help="Path to an image file")
+    parser.add_argument("--image", type=str, help="Path to an image file")
     parser.add_argument("--query", type=str, help="Text query to rewrite based on the image")
 
     args = parser.parse_args()
